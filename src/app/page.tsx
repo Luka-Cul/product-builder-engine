@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { gymConfig } from "@/data/gymConfig";
 import ItemCard from "@/components/ItemCard";
+import { calculateTotalPrice } from "@/lib/priceCalculator";
 
 export default function Home() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -15,15 +16,59 @@ export default function Home() {
     );
   };
 
+  //total price
+  const totalPrice = calculateTotalPrice(gymConfig, selectedItems);
+
+  //product list
   const selectedProducts = gymConfig.sections
     .flatMap((section) => section.items)
     .filter((item) => selectedItems.includes(item.id));
 
-  const totalPrice = selectedProducts.reduce(
-    (sum, item) => sum + item.price,
-    0
-  );
+  const totalItems = gymConfig.sections
+  .flatMap((section) => section.items).length;
 
+  //progress barr
+  const progress = (selectedItems.length / totalItems) * 100;
+
+  //score
+  const selectedByCategory = gymConfig.sections.map((section) => {
+    const count = section.items.filter((item) =>
+      selectedItems.includes(item.id)
+    ).length;
+
+    return count;
+  });
+
+  const categoryBalanceScore = 
+  selectedByCategory.filter((count) => count > 0).length *
+  (100 / gymConfig.sections.length);
+
+  const score = Math.round((progress + categoryBalanceScore) / 2);
+
+  //coach recomendations
+  //suggests a mid-tier option if available, otherwise fallbacks to first item
+  const recommendations: string[] = [];
+
+  gymConfig.sections.forEach((section) => {
+    const hasAny = section.items.some((item) =>
+      selectedItems.includes(item.id)
+    );
+
+    if (!hasAny) {
+      const item =
+        section.items.length > 1
+          ? section.items[1]
+          : section.items[0];
+
+      if (item) {
+        recommendations.push(
+          `Add ${item.name} to start your ${section.title.toLowerCase()} setup`
+        );
+      }
+    }
+  });
+
+  //UI Display
   return (
     <div className="h-screen grid grid-cols-2">
       
@@ -60,6 +105,54 @@ export default function Home() {
           Your Setup
         </h2>
 
+        {/* PROGRESS BAR */}
+        <div className="mb-4">
+          <div className="flex justify-between text-sm mb-1">
+            <span>Build Progress</span>
+            <span>{Math.round(progress)}%</span>
+          </div>
+
+          <div className="w-full bg-gray-200 rounded h-2">
+            <div
+              className="bg-black h-2 rounded"
+              style={{ width: `${progress}%` }}
+            />
+          </div>
+        </div>
+
+        {/* SCORE */}
+        <div className="mt-4">
+          <div className="flex justify-between text-sm mb-1">
+            <span>Build Score</span>
+            <span>{score}/100</span>
+          </div>
+
+          <div className="w-full bg-gray-200 rounded h-2">
+            <div
+              className="bg-black h-2 rounded"
+              style={{ width: `${score}%` }}
+            />
+          </div>
+        </div>
+
+        {/* COACH INSIGHTS */}
+        <div className="mt-6">
+          <h3 className="font-semibold mb-2">
+            Recommendations
+          </h3>
+
+          <div className="space-y-2 text-sm text-gray-600">
+            {recommendations.length === 0 ? (
+              <p>Your setup looks complete 👍</p>
+            ) : (
+              recommendations.map((text, i) => (
+                <p key={i}>• {text}</p>
+              ))
+            )}
+          </div>
+        </div>
+
+        {/* TOTAL PRICE */}
         <div className="text-3xl font-bold">
           €{totalPrice.toLocaleString()}
         </div>
@@ -68,6 +161,7 @@ export default function Home() {
           Estimated Total
         </p>
 
+        {/* ITEMS LIST */}
         <div className="mt-6">
           <h3 className="font-semibold mb-2">
             Selected Equipment

@@ -1,4 +1,6 @@
-export const gymConfig = {
+import { GymConfig } from "@/types/gym";
+
+export const gymConfig: GymConfig = {
   sections: [
     {
       id: "cardio",
