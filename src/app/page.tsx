@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { gymConfig } from "@/data/gymConfig";
+import ItemCard from "@/components/ItemCard";
 
 export default function Home() {
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
@@ -14,10 +15,14 @@ export default function Home() {
     );
   };
 
-  const totalPrice = gymConfig.sections
-  .flatMap((section) => section.items)
-  .filter((item) => selectedItems.includes(item.id))
-  .reduce((sum, item) => sum + item.price, 0);
+  const selectedProducts = gymConfig.sections
+    .flatMap((section) => section.items)
+    .filter((item) => selectedItems.includes(item.id));
+
+  const totalPrice = selectedProducts.reduce(
+    (sum, item) => sum + item.price,
+    0
+  );
 
   return (
     <div className="h-screen grid grid-cols-2">
@@ -36,20 +41,13 @@ export default function Home() {
 
             <div className="space-y-2">
               {section.items.map((item) => (
-                <div
+                <ItemCard
                   key={item.id}
+                  name={item.name}
+                  price={item.price}
+                  selected={selectedItems.includes(item.id)}
                   onClick={() => toggleItem(item.id)}
-                  className={`flex justify-between items-center border p-2 rounded cursor-pointer ${
-                    selectedItems.includes(item.id)
-                      ? "border-black bg-gray-100"
-                      : ""
-                  }`}
-                >
-                  <span>{item.name}</span>
-                  <span className="text-gray-500">
-                    €{item.price}
-                  </span>
-                </div>
+                />
               ))}
             </div>
           </div>
@@ -63,12 +61,31 @@ export default function Home() {
         </h2>
 
         <div className="text-3xl font-bold">
-          €{totalPrice}
+          €{totalPrice.toLocaleString()}
         </div>
 
         <p className="text-gray-500 mt-2">
           Estimated Total
         </p>
+
+        <div className="mt-6">
+          <h3 className="font-semibold mb-2">
+            Selected Equipment
+          </h3>
+
+          <div className="space-y-2">
+            {selectedProducts.map((item) => (
+              <div
+                key={item.id}
+                className="flex justify-between text-sm"
+              >
+                <span>{item.name}</span>
+                <span>€{item.price}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+
       </div>
 
     </div>
