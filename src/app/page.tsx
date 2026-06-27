@@ -1,14 +1,21 @@
 "use client";
 
-import { useState } from "react";
 import { gymConfig } from "@/data/gymConfig";
 import ItemCard from "@/components/ItemCard";
 import { calculateTotalPrice } from "@/lib/priceCalculator";
-import CountUp from "react-countup";
+import { useEffect, useState } from "react";
+import { animateValue } from "@/lib/animations";
 
 export default function Home() {
+  // =====================
+  // STATE
+  // =====================
   const [selectedItems, setSelectedItems] = useState<string[]>([]);
+  const [animatedPrice, setAnimatedPrice] = useState(0);
 
+  // =====================
+  // ACTIONS
+  // =====================
   const toggleItem = (itemId: string) => {
     setSelectedItems((prev) =>
       prev.includes(itemId)
@@ -17,8 +24,17 @@ export default function Home() {
     );
   };
 
+  // =====================
+  // DERIVED DATA (ENGINE)
+  // =====================
+
   //total price
   const totalPrice = calculateTotalPrice(gymConfig, selectedItems);
+  
+  //total price animation
+  useEffect(() => {
+    animateValue(animatedPrice, totalPrice, 400, setAnimatedPrice);
+  }, [totalPrice]);
 
   //product list
   const selectedProducts = gymConfig.sections
@@ -40,6 +56,7 @@ export default function Home() {
     return count;
   });
 
+  // SCORE ENGINE
   const categoryBalanceScore = 
   selectedByCategory.filter((count) => count > 0).length *
   (100 / gymConfig.sections.length);
@@ -69,32 +86,35 @@ export default function Home() {
     }
   });
 
-  //UI Display
+// =====================
+// UI
+// =====================
+
   return (
     <div className="min-h-screen flex items-center justify-center p-6">
       <div className="w-full max-w-4xl bg-white rounded-[16px] shadow-lg overflow-hidden grid grid-cols-[1fr_360px]">
       
         {/* LEFT: Builder */}
-        <div className="p-8">
-          <h1 className="text-2xl font-bold mb-6">
+        <div className="p-10">
+          <h1 className="text-[34px] font-black tracking-[-1.2px] mb-10">
             Home Gym Builder
           </h1>
 
-          {gymConfig.sections.map((section) => (
+          {gymConfig.sections.map((section, index) => (
             <div key={section.id} className="mb-6">
 
               {/* ITEM CARD DESIGN */}
               <div className="flex items-baseline gap-2 mb-3">
-                <span className="text-[11px] text-gray-400 font-medium">
-                  0{gymConfig.sections.findIndex(s => s.id === section.id) + 1}
+                <span className="text-[11px] text-gray-400 font-semibold tracking-[1px]">
+                  0{index + 1}
                 </span>
 
-                <h2 className="font-extrabold tracking-[-0.5px]">
+                <h2 className="font-bold tracking-[-0.5px] text-[16px]">
                   {section.title}
                 </h2>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-3">
                 {section.items.map((item) => (
                   <ItemCard
                     key={item.id}
@@ -114,70 +134,72 @@ export default function Home() {
           <h2 className="text-xl font-semibold mb-4">
             Your Setup
           </h2>
+          
+          <div className="space-y-6 mb-5">
+            {/* PROGRESS BAR */}
+            <div className="">
+              <div className="flex justify-between text-[14px] text-white/60 uppercase tracking-[1.2px] mb-2">
+                <span>Build Progress</span>
+                <span>{Math.round(progress)}%</span>
+              </div>
 
-          {/* PROGRESS BAR */}
-          <div className="mb-4">
-            <div className="flex justify-between text-[11px] uppercase tracking-[1.2px] opacity-40 mb-2">
-              <span>Build Progress</span>
-              <span>{Math.round(progress)}%</span>
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#C8F135] transition-all duration-300"
+                  style={{ width: `${progress}%` }}
+                />
+              </div>
             </div>
 
-            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#C8F135] transition-all duration-300"
-                style={{ width: `${progress}%` }}
-              />
+            {/* SCORE */}
+            <div className="">
+              <div className="flex justify-between text-[14px] text-white/60 uppercase tracking-[1.2px] mb-2">
+                <span>Build Score</span>
+                <span>{score}/100</span>
+              </div>
+
+              <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-[#C8F135] transition-all duration-300"
+                  style={{ width: `${score}%` }}
+                />
+              </div>
             </div>
-          </div>
 
-          {/* SCORE */}
-          <div className="mt-4">
-            <div className="flex justify-between text-[11px] uppercase tracking-[1.2px] opacity-40 mb-2">
-              <span>Build Score</span>
-              <span>{score}/100</span>
-            </div>
+            {/* COACH INSIGHTS */}
+            <div className="">
+              <h3 className="font-semibold mb-2">
+                Recommendations
+              </h3>
 
-            <div className="w-full h-2 bg-white/10 rounded-full overflow-hidden">
-              <div
-                className="h-full bg-[#C8F135] transition-all duration-300"
-                style={{ width: `${score}%` }}
-              />
-            </div>
-          </div>
-
-          {/* COACH INSIGHTS */}
-          <div className="mt-6">
-            <h3 className="font-semibold mb-2">
-              Recommendations
-            </h3>
-
-            <div className="space-y-2 text-sm text-gray-600">
-              {recommendations.length === 0 ? (
-                <p>Your setup looks complete 👍</p>
-              ) : (
-                recommendations.map((text, i) => (
-                  <p key={i}>• {text}</p>
-                ))
-              )}
+              <div className="space-y-2 text-sm text-white/60">
+                {recommendations.length === 0 ? (
+                  <p>Your setup looks complete 👍</p>
+                ) : (
+                  recommendations.map((text, i) => (
+                    <p key={i}>• {text}</p>
+                  ))
+                )}
+              </div>
             </div>
           </div>
 
           {/* TOTAL PRICE */}
-          <div className="mb-6">
-            <p className="text-[11px] uppercase tracking-[1.2px] opacity-40 mb-2">
+          <div className="mb-8">
+            <p className="mb-3 text-[12px] text-white/80 uppercase tracking-[1.2px] text-xs mb-2">
               Estimated Total
             </p>
 
-            <div className="bg-[#C8F135] text-[#111] rounded-[8px] p-4">
-              <div className="text-[38px] font-black tracking-[-2px] leading-none">
-                €<CountUp end={totalPrice} duration={0.4} separator="," />
+            <div className="bg-[#C8F135] text-[#111] rounded-[12px] p-5 shadow-lg">
+              <div className="text-[42px] font-black tracking-[-2px] leading-none">
+                €{animatedPrice.toLocaleString()}
               </div>
             </div>
           </div>
 
           {/* ITEMS LIST */}
-          <div className="mt-6">
-            <h3 className="font-semibold mb-2">
+          <div className="space-y-2">
+            <h3 className="text-[12px] text-white/80 uppercase tracking-[1.2px] text-xs mb-2">
               Selected Equipment
             </h3>
 
